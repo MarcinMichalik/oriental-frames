@@ -1,32 +1,34 @@
-package me.michalik.oriental.frames.notx;
+package me.michalik.oriental.frames.tx;
 
 
 import com.orientechnologies.orient.core.id.ORID;
 import com.orientechnologies.orient.core.sql.query.OSQLQuery;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
-import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
+import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.frames.EdgeFrame;
-import com.tinkerpop.frames.FramedGraph;
+import com.tinkerpop.frames.FramedTransactionalGraph;
 import com.tinkerpop.frames.VertexFrame;
-import me.michalik.oriental.frames.notx.results.ResultEdgeFrame;
-import me.michalik.oriental.frames.notx.results.ResultEdgeFrameIterable;
-import me.michalik.oriental.frames.notx.results.ResultVertexFrame;
-import me.michalik.oriental.frames.notx.results.ResultVertexFrameIterable;
+import me.michalik.oriental.frames.tx.results.ResultEdgeFrame;
+import me.michalik.oriental.frames.tx.results.ResultEdgeFrameIterable;
+import me.michalik.oriental.frames.tx.results.ResultVertexFrame;
+import me.michalik.oriental.frames.tx.results.ResultVertexFrameIterable;
 
 import java.util.function.Consumer;
 
-public class FramedGraphNoTxOperation {
+public class FramedTransactionalGraphOperation {
 
-    private final FramedGraph<OrientGraphNoTx> framedGraph;
+    private final FramedTransactionalGraph<OrientGraph> framedGraph;
 
-    public FramedGraphNoTxOperation(FramedGraph<OrientGraphNoTx> framedGraph) {
+    public FramedTransactionalGraphOperation(FramedTransactionalGraph<OrientGraph> framedGraph) {
         this.framedGraph = framedGraph;
     }
 
-    public void frame(Consumer<FramedGraph<OrientGraphNoTx>> consumer){
+    public void frame(Consumer<FramedTransactionalGraph> consumer){
         try{
             consumer.accept(this.framedGraph);
+            this.framedGraph.commit();
         }catch (Exception e){
+            this.framedGraph.rollback();
             throw e;
         }finally {
             this.framedGraph.shutdown();
@@ -66,8 +68,8 @@ public class FramedGraphNoTxOperation {
     public <T extends VertexFrame> Object saveVertex(String className, Class<T> clazz, Consumer<T> consumer){
         try{
             T frameVertex =  this.framedGraph.addVertex("class:" + className, clazz);
-//            consumer.accept(clazz.cast(this.framedGraph.addVertex("class:" + className, clazz)));
             consumer.accept(clazz.cast(frameVertex));
+            this.framedGraph.commit();
             return frameVertex.asVertex().getId();
         }catch (Exception e){
             throw e;
@@ -83,8 +85,8 @@ public class FramedGraphNoTxOperation {
     public <T extends EdgeFrame> Object saveEdge(String className, Class<T> clazz, Consumer<T> consumer){
         try{
             T edgeFrame =  this.framedGraph.addVertex("class:" + className, clazz);
-//            consumer.accept(clazz.cast(this.framedGraph.addVertex("class:" + className, clazz)));
             consumer.accept(clazz.cast(edgeFrame));
+            this.framedGraph.commit();
             return edgeFrame.asEdge().getId();
         }catch (Exception e){
             throw e;
@@ -97,7 +99,9 @@ public class FramedGraphNoTxOperation {
         try{
             T vertexFrame = this.framedGraph.getVertex(orid, clazz);
             consumer.accept(vertexFrame);
+            this.framedGraph.commit();
         }catch (Exception e){
+            this.framedGraph.rollback();
             throw e;
         }finally {
             this.framedGraph.shutdown();
@@ -105,14 +109,15 @@ public class FramedGraphNoTxOperation {
     }
 
     public <T extends EdgeFrame> void updateEdge(ORID orid, Class<T> clazz, Consumer<T> consumer){
-        try {
+        try{
             T edgeFrame = this.framedGraph.getEdge(orid, clazz);
             consumer.accept(edgeFrame);
+            this.framedGraph.commit();
         }catch (Exception e){
+            this.framedGraph.rollback();
             throw e;
         }finally {
             this.framedGraph.shutdown();
         }
     }
-
 }

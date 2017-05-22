@@ -4,8 +4,8 @@ package me.michalik.oriental.frames;
 import com.tinkerpop.frames.FramedGraphFactory;
 import me.michalik.oriental.core.Oriental;
 import me.michalik.oriental.core.OrientalProperties;
-import me.michalik.oriental.frames.notx.FramedGraphNoTxOperation;
-import me.michalik.oriental.frames.tx.FramedGraphOperation;
+import me.michalik.oriental.frames.notx.FramedGraphOperation;
+import me.michalik.oriental.frames.tx.FramedTransactionalGraphOperation;
 
 public class OrientalFrames extends Oriental{
 
@@ -16,11 +16,11 @@ public class OrientalFrames extends Oriental{
         this.framedGraphFactory = framedGraphFactory;
     }
 
-    public FramedGraphNoTxOperation framedGraphNoTxOperation(){
-        return new FramedGraphNoTxOperation(this.framedGraphFactory.create(getOrientGraphNoTx()));
+    public FramedGraphOperation framedGraphNoTxOperation(){
+        return new FramedGraphOperation(this.framedGraphFactory.create(getOrientGraphNoTx()));
     }
 
-    public FramedGraphOperation framedGraphOperation(){
-        return new FramedGraphOperation(this.framedGraphFactory.create(getOrientGraph()));
+    public FramedTransactionalGraphOperation framedGraphOperation(){
+        return new FramedTransactionalGraphOperation(this.framedGraphFactory.create(getOrientGraph()));
     }
 }
