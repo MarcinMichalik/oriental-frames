@@ -17,10 +17,10 @@ public class OrientalFrames extends Oriental{
     }
 
     public FramedGraphOperation framedGraphNoTxOperation(){
-        return new FramedGraphOperation(this.framedGraphFactory.create(getOrientGraphNoTx()));
+        return new FramedGraphOperation(this.framedGraphFactory.create(super.getOrientGraphNoTx()));
     }
 
     public FramedTransactionalGraphOperation framedGraphOperation(){
-        return new FramedTransactionalGraphOperation(this.framedGraphFactory.create(getOrientGraph()));
+        return new FramedTransactionalGraphOperation(this.framedGraphFactory.create(super.getOrientGraph()));
     }
 }

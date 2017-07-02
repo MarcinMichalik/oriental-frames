@@ -13,6 +13,7 @@ import me.michalik.oriental.frames.notx.results.ResultEdgeFrameIterable;
 import me.michalik.oriental.frames.notx.results.ResultVertexFrame;
 import me.michalik.oriental.frames.notx.results.ResultVertexFrameIterable;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class FramedGraphOperation {
@@ -26,6 +27,16 @@ public class FramedGraphOperation {
     public void frame(Consumer<FramedGraph<OrientGraphNoTx>> consumer){
         try{
             consumer.accept(this.framedGraph);
+        }catch (Exception e){
+            throw e;
+        }finally {
+            this.framedGraph.shutdown();
+        }
+    }
+
+    public void frame(BiConsumer<FramedGraph<OrientGraphNoTx>, InnerCommonOperation> consumer){
+        try{
+            consumer.accept(this.framedGraph, new InnerCommonOperation(this.framedGraph));
         }catch (Exception e){
             throw e;
         }finally {
@@ -76,6 +87,22 @@ public class FramedGraphOperation {
         }
     }
 
+    public <T extends VertexFrame> Object saveVertex(Class<T> clazz, BiConsumer<T, InnerOperation> consumer){
+        return this.saveVertex(clazz.getSimpleName(), clazz, consumer);
+    }
+
+    public <T extends VertexFrame> Object saveVertex(String className, Class<T> clazz, BiConsumer<T, InnerOperation> consumer){
+        try{
+            T frameVertex =  this.framedGraph.addVertex("class:" + className, clazz);
+            consumer.accept(clazz.cast(frameVertex), new InnerOperation(this.framedGraph));
+            return frameVertex.asVertex().getId();
+        }catch (Exception e){
+            throw e;
+        }finally {
+            this.framedGraph.shutdown();
+        }
+    }
+
     public <T extends EdgeFrame> Object saveEdge(Class<T> clazz, Consumer<T> consumer){
         return this.saveEdge(clazz.getClass().getSimpleName(), clazz, consumer);
     }
@@ -83,7 +110,6 @@ public class FramedGraphOperation {
     public <T extends EdgeFrame> Object saveEdge(String className, Class<T> clazz, Consumer<T> consumer){
         try{
             T edgeFrame =  this.framedGraph.addVertex("class:" + className, clazz);
-//            consumer.accept(clazz.cast(this.framedGraph.addVertex("class:" + className, clazz)));
             consumer.accept(clazz.cast(edgeFrame));
             return edgeFrame.asEdge().getId();
         }catch (Exception e){
@@ -93,10 +119,37 @@ public class FramedGraphOperation {
         }
     }
 
+//    public <T extends EdgeFrame> Object saveEdge(Class<T> clazz, BiConsumer<T, InnerOperation> consumer){
+//        return this.saveEdge(clazz.getClass().getSimpleName(), clazz, consumer);
+//    }
+//
+//    public <T extends EdgeFrame> Object saveEdge(String className, Class<T> clazz, BiConsumer<T, InnerOperation> consumer){
+//        try{
+//            T edgeFrame =  this.framedGraph.addVertex("class:" + className, clazz);
+//            consumer.accept(clazz.cast(edgeFrame), new InnerOperation(this.framedGraph));
+//            return edgeFrame.asEdge().getId();
+//        }catch (Exception e){
+//            throw e;
+//        }finally {
+//            this.framedGraph.shutdown();
+//        }
+//    }
+
     public <T extends VertexFrame> void updateVertex(ORID orid, Class<T> clazz, Consumer<T> consumer){
         try{
             T vertexFrame = this.framedGraph.getVertex(orid, clazz);
             consumer.accept(vertexFrame);
+        }catch (Exception e){
+            throw e;
+        }finally {
+            this.framedGraph.shutdown();
+        }
+    }
+
+    public <T extends VertexFrame> void updateVertex(ORID orid, Class<T> clazz, BiConsumer<T, InnerOperation> consumer){
+        try{
+            T vertexFrame = this.framedGraph.getVertex(orid, clazz);
+            consumer.accept(vertexFrame, new InnerOperation(this.framedGraph));
         }catch (Exception e){
             throw e;
         }finally {
@@ -114,5 +167,40 @@ public class FramedGraphOperation {
             this.framedGraph.shutdown();
         }
     }
+
+    public <T extends EdgeFrame> void updateEdge(ORID orid, Class<T> clazz, BiConsumer<T, InnerOperation> consumer){
+        try {
+            T edgeFrame = this.framedGraph.getEdge(orid, clazz);
+            consumer.accept(edgeFrame, new InnerOperation(this.framedGraph));
+        }catch (Exception e){
+            throw e;
+        }finally {
+            this.framedGraph.shutdown();
+        }
+    }
+
+    public <T extends VertexFrame> void removeVertex(ORID orid, Class<T> clazz){
+        try{
+            T vertex = this.framedGraph.getVertex(orid, clazz);
+            this.framedGraph.removeVertex(vertex.asVertex());
+        }catch (Exception e){
+            throw e;
+        }finally {
+            this.framedGraph.shutdown();
+        }
+    }
+
+    public <T extends EdgeFrame> void removeEdge(ORID orid, Class<T> clazz){
+        try{
+            T edge = this.framedGraph.getEdge(orid, clazz);
+            this.framedGraph.removeEdge(edge.asEdge());
+        }catch (Exception e){
+            throw e;
+        }finally {
+            this.framedGraph.shutdown();
+        }
+    }
+
+    // add vertexToVertexById
 
 }
