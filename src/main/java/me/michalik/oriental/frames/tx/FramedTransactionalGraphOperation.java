@@ -2,6 +2,7 @@ package me.michalik.oriental.frames.tx;
 
 
 import com.orientechnologies.orient.core.id.ORID;
+import com.orientechnologies.orient.core.id.ORecordId;
 import com.orientechnologies.orient.core.sql.query.OSQLQuery;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
@@ -72,16 +73,16 @@ public class FramedTransactionalGraphOperation {
         return new ResultEdgeFrameIterable<>(edgeFrames, this.framedGraph);
     }
 
-    public <T extends VertexFrame> Object saveVertex(Class<T> clazz, Consumer<T> consumer){
+    public <T extends VertexFrame> ORecordId saveVertex(Class<T> clazz, Consumer<T> consumer){
         return this.saveVertex(clazz.getSimpleName(), clazz, consumer);
     }
 
-    public <T extends VertexFrame> Object saveVertex(String className, Class<T> clazz, Consumer<T> consumer){
+    public <T extends VertexFrame> ORecordId saveVertex(String className, Class<T> clazz, Consumer<T> consumer){
         try{
             T frameVertex =  this.framedGraph.addVertex("class:" + className, clazz);
             consumer.accept(clazz.cast(frameVertex));
             this.framedGraph.commit();
-            return frameVertex.asVertex().getId();
+            return (ORecordId) frameVertex.asVertex().getId();
         }catch (Exception e){
             throw e;
         }finally {
@@ -89,16 +90,16 @@ public class FramedTransactionalGraphOperation {
         }
     }
 
-    public <T extends VertexFrame> Object saveVertex(Class<T> clazz, BiConsumer<T, InnerOperation> consumer){
+    public <T extends VertexFrame> ORecordId saveVertex(Class<T> clazz, BiConsumer<T, InnerOperation> consumer){
         return this.saveVertex(clazz.getSimpleName(), clazz, consumer);
     }
 
-    public <T extends VertexFrame> Object saveVertex(String className, Class<T> clazz, BiConsumer<T, InnerOperation> consumer){
+    public <T extends VertexFrame> ORecordId saveVertex(String className, Class<T> clazz, BiConsumer<T, InnerOperation> consumer){
         try{
             T frameVertex =  this.framedGraph.addVertex("class:" + className, clazz);
             consumer.accept(clazz.cast(frameVertex), new InnerOperation(this.framedGraph));
             this.framedGraph.commit();
-            return frameVertex.asVertex().getId();
+            return (ORecordId) frameVertex.asVertex().getId();
         }catch (Exception e){
             throw e;
         }finally {
